@@ -33,7 +33,7 @@
 
 #include <event2/event.h>
 
-#include <openssl/ssl.h>
+#include "ns_turn_openssl.h"
 
 #include "ns_turn_ioaddr.h"
 #include "ns_turn_msg_defs.h"
@@ -90,7 +90,7 @@ extern int IS_TURN_SERVER;
 
 #endif
 
-#if defined(TURN_NO_DTLS) || !defined(DTLS_CTRL_LISTEN)
+#if defined(TURN_NO_DTLS) || (!defined(DTLS_CTRL_LISTEN) && (OPENSSL_VERSION_NUMBER < 0x10100000L))
 
 	#define DTLS_SUPPORTED 0
 	#define DTLSv1_2_SUPPORTED 0
@@ -135,8 +135,8 @@ typedef enum _TURN_TLS_TYPE TURN_TLS_TYPE;
 struct _oauth_key_data_raw {
 	char kid[OAUTH_KID_SIZE+1];
 	char ikm_key[OAUTH_KEY_SIZE+1];
-	u64bits timestamp;
-	u32bits lifetime;
+	uint64_t timestamp;
+	uint32_t lifetime;
 	char as_rs_alg[OAUTH_ALG_SIZE+1];
 	char realm[STUN_MAX_REALM_SIZE+1];
 };

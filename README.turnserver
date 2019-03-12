@@ -108,7 +108,7 @@ User database settings:
 		secret-based timed authentication in TURN RESP API.
 		The connection string format is like that:
 		 
-		"host=<host> dbname=<dbname> user=<db-user> password=<db-user-password> connect_timeout=<seconds>"
+		"host=<host> dbname=<dbname> user=<db-user> password=<db-user-password> connect_timeout=<seconds> read_timeout=<seconds>"
 
 		See the INSTALL file for more explanations and examples.
 		
@@ -120,6 +120,11 @@ User database settings:
 		(see http://dev.mysql.com/doc/refman/5.1/en/ssl-options.html for the 
 		command options description).
 		
+--secret-key-file 	This is the file path which contain secret key of aes encryption while using MySQL password encryption.
+			If you want to use in the MySQL connection string the password in encrypted format,
+			then set in this option the file path of the secret key. The key which is used to encrypt MySQL password.
+			Warning: If this option is set, then MySQL password must be set in "mysql-userdb" option in encrypted format! 
+			If you want to use cleartext password then do not set this option!
 -J, --mongo-userdb	User database connection string for MongoDB. 
 		This database can be used for long-term credentials mechanism,
 		and it can store the secret value 
@@ -152,6 +157,8 @@ Flags:
 -V, --Verbose		Extra verbose mode, very annoying and not recommended.
 
 -o, --daemon		Run server as daemon.
+
+--prod       	 	Production mode: hide the software version.
 
 -f, --fingerprint	Use fingerprints in the TURN messages. If an incoming request
 			contains a fingerprint, then TURN server will always add 
@@ -207,8 +214,6 @@ Flags:
 --no-tcp-relay		Do not allow TCP relay endpoints defined in RFC 6062, 
 			use only UDP relay endpoints as defined in RFC 5766. 
 
---stale-nonce		Use extra security with nonce value having limited lifetime (600 secs). 
-
 --no-stdout-log		Flag to prevent stdout log messages.
 			By default, all log messages are going to both stdout and to
 			the configured log file. With this option everything will be going to 
@@ -229,7 +234,11 @@ Flags:
 --no-stun		Run as TURN server only, all STUN requests will be ignored. 
 			Option to suppress STUN functionality, only TURN requests will be processed.
 
---no-loopback-peers	Disallow peers on the loopback addresses (127.x.x.x and ::1).
+--allow-loopback-peers	Allow peers on the loopback addresses (127.x.x.x and ::1).
+             Allow it only for testing in a development environment! 
+             In production it adds a possible security vulnerability, 
+             and so due to security reasons, it is not allowed 
+             using it together with empty cli-password.
 
 --no-multicast-peers	Disallow peers on well-known broadcast addresses 
 			(224.0.0.0 and above, and FFXX:*).
@@ -259,7 +268,20 @@ Flags:
 
 -h			Help.
     
-Options with required values:  
+Options with values:  
+
+--stale-nonce[=<value>]		Use extra security with nonce value having
+							limited lifetime, in seconds (default 600 secs).
+
+--max-allocate-lifetime		Set the maximum value for the allocation lifetime.
+							Default to 3600 secs.
+
+--channel-lifetime 	Set the lifetime for channel binding, default to 600 secs.
+					This value MUST not be changed for production purposes.
+
+--permission-lifetime	Set the value for the lifetime of the permission.
+					Default to 300 secs.
+					This MUST not be changed for production purposes.
 
 -d, --listening-device	Listener interface device.
 			(NOT RECOMMENDED. Optional functionality, Linux only). 
@@ -360,7 +382,7 @@ Options with required values:
 
 -u, --user		Long-term security mechanism credentials user account, 
 			in the column-separated form username:key. 
-			Multiple user accounts may used in the command line.
+			Multiple user accounts may be used in the command line.
 			The key is either the user password, or
 			the key is generated
 			by turnadmin command. In the second case,
@@ -513,7 +535,11 @@ Options with required values:
 	
 --proc-group		Group name to run the process. After the initialization, the turnserver process
 			will make an attempt to change the current group ID to that group.
-			
+
+-K, --keep-address-family		TURN server allocates address family according TURN
+			Client <=> Server communication address family.
+			!! It breaks RFC6156 section-4.2 (violates default IPv4) !!
+
 --cli-ip		Local system IP address to be used for CLI management interface.
 			The turnserver process can be accessed for management with telnet,
 			at this IP address and on the CLI port (see the next parameter). 
@@ -529,6 +555,15 @@ Options with required values:
 
 --cli-max-output-sessions	Maximum number of output sessions in ps CLI command.
 			This value can be changed on-the-fly in CLI. The default value is 256.
+
+--web-admin		Enable Turn Web-admin support. By default it is disabled.
+
+--web-admin-ip=<IP>	Local system IP address to be used for Web-admin server endpoint. Default value is 127.0.0.1.
+
+--web-admin-port=<port>  Web-admin server port. Default is 8080.
+--web-admin-listen-on-workers   Enable for web-admin server to listens on STUN/TURN workers STUN/TURN ports.
+			By default it is disabled for security resons!
+			(This behavior used to be the default behavior, and was enabled by default.)
 
 --ne=[1|2|3]		Set network engine type for the process (for internal purposes).
 
@@ -948,3 +983,5 @@ https://groups.google.com/forum/?fromgroups=#!forum/turn-server-project-rfc5766-
 	Federico Pinna <fpinna@vivocha.com>
 
 	Bradley T. Hughes <bradleythughes@fastmail.fm>
+
+        Mihaly Meszaros <misi@majd.eu>
